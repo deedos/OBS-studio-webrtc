@@ -1,54 +1,65 @@
+hr() {
+  echo "───────────────────────────────────────────────────"
+  echo $1
+  echo "───────────────────────────────────────────────────"
+}
+
 # Exit if something fails
 set -e
 
 # Echo all commands before executing
 set -v
 
-#git fetch --unshallow
+if [-v "$TRAVIS" ];then
+  git fetch --unshallow
+fi
+
+export CEF_BUILD_VERSION=3.3282.1726.gc8368c8
 
 # Leave obs-studio folder
 cd ../
 
-brew install speexdsp swig wget https://raw.githubusercontent.com/Homebrew/homebrew-core/8d4d48f0bb552b7b107119aeef59f141ce1f72c3/Formula/qt.rb &
-
-
 # Install Packages app so we can build a package later
 # http://s.sudre.free.fr/Software/Packages/about.html
-
+hr "Downloading Packages app"
 wget --retry-connrefused --waitretry=1 https://s3-us-west-2.amazonaws.com/obs-nightly/Packages.pkg
-
 sudo installer -pkg ./Packages.pkg -target /
 
 brew update
 
 #Base OBS Deps and ccache
+brew install speexdsp swig mbedtls wget
+brew install https://gist.githubusercontent.com/DDRBoxman/b3956fab6073335a4bf151db0dcbd4ad/raw/ed1342a8a86793ea8c10d8b4d712a654da$
 
 export PATH=/usr/local/opt/ccache/libexec:$PATH
 ccache -s || echo "CCache is not available."
 
 # Fetch and untar prebuilt OBS deps that are compatible with older versions of OSX
-wget --retry-connrefused --waitretry=1 https://s3-us-west-2.amazonaws.com/obs-nightly/osx-deps.tar.gz
-tar -xf ./osx-deps.tar.gz -C /tmp
+wget --retry-connrefused --waitretry=1 https://obs-nightly.s3.amazonaws.com/osx-deps-2018-08-09.tar.gz
+tar -xf ./osx-deps-2018-08-09.tar.gz -C /tmp
 
 # Fetch vlc codebase
-wget --retry-connrefused --waitretry=1 -O vlc-master.zip https://github.com/videolan/vlc/archive/master.zip
-unzip -q ./vlc-master.zip
+hr "Downloading VLC repo"
+wget --retry-connrefused --waitretry=1  https://downloads.videolan.org/vlc/3.0.4/vlc-3.0.4.tar.xz
+tar -xf vlc-3.0.4.tar.xz
 
 # Get sparkle
-wget --retry-connrefused --waitretry=1 -O sparkle.tar.bz2 https://github.com/sparkle-project/Sparkle/releases/download/1.16.0/Sparkle-1.16.0.tar.bz2
+hr "Downloading Sparkle framework"
+wget --retry-connrefused --waitretry=1 -O sparkle.tar.bz2 https://github.com/sparkle-project/Sparkle/releases/download/1.20.0/Sparkle-1.20.0.tar.bz2
 mkdir ./sparkle
 tar -xf ./sparkle.tar.bz2 -C ./sparkle
 sudo cp -R ./sparkle/Sparkle.framework /Library/Frameworks/Sparkle.framework
 
 # CEF Stuff
-#wget --retry-connrefused --waitretry=1 https://obs-nightly.s3-us-west-2.amazonaws.com/cef_binary_${CEF_BUILD_VERSION}_macosx64.tar.bz2
-#tar -xf ./cef_binary_${CEF_BUILD_VERSION}_macosx64.tar.bz2
-#cd ./cef_binary_${CEF_BUILD_VERSION}_macosx64
-# remove a broken test
-#sed -i '.orig' '/add_subdirectory(tests\/ceftests)/d' ./CMakeLists.txt
-#mkdir build
-#cd ./build
-#make -DCMAKE_CXX_FLAGS="-std=c++11 -stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-std=c++11 -stdlib=libc++" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9 ..
-#make -j4
-#mkdir libcef_dll
-#cd ../../
+hr "Downloading CEF"
+wget --retry-connrefused --waitretry=1 https://obs-nightly.s3-us-west-2.amazonaws.com/cef_binary_${CEF_BUILD_VERSION}_macosx64.tar.bz2
+tar -xf ./cef_binary_${CEF_BUILD_VERSION}_macosx64.tar.bz2
+cd ./cef_binary_${CEF_BUILD_VERSION}_macosx64
+ remove a broken test
+sed -i '.orig' '/add_subdirectory(tests\/ceftests)/d' ./CMakeLists.txt
+mkdir build
+cd ./build
+make -DCMAKE_CXX_FLAGS="-std=c++11 -stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-std=c++11 -stdlib=libc++" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 ..
+make -j4
+mkdir libcef_dll
+cd ../../
