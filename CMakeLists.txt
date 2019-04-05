@@ -27,6 +27,8 @@ include(ObsHelpers)
 include(ObsCpack)
 include(GNUInstallDirs)
 
+include_directories("${DEV_DIR}/webrtc-checkout/src")
+
 if(MSVC AND NOT EXISTS "${CMAKE_BINARY_DIR}/ALL_BUILD.vcxproj.user")
 	file(GENERATE
 		OUTPUT "${CMAKE_BINARY_DIR}/ALL_BUILD.vcxproj.user"

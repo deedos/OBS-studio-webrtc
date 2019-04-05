@@ -45,6 +45,92 @@ https://bugs.chromium.org/p/webrtc/issues/list
 
 Follow the original compilation, Installation and packaging guide https://github.com/obsproject/obs-studio
 
+#### Standard Build (macOS)
+``` bash
+# Build libwebrtc:
+git clone --recursive https://[url of repository host]/[repo owner]/webrtc-checkout.git
+
+cd src
+cat README.md
+# follow instructions to build webrtc (m69)
+
+git clone --recursive https://[url of repository host]/[repo owner]/obs-studio-mfc.git
+
+cd obs-studio-mfc
+
+sh ./build-deps.sh
+sh ./build.sh
+sh ./make-package.sh
+```
+
+#### Manual Compilation (macOS)
+``` bash
+mkdir -p /tmp/obsdeps-src
+mkdir -p /tmp/obsdeps
+
+# download and extract the following dependencies into /tmp/obsdeps-src:
+# FFmpeg n4.0.2, openssl 1.1.0g, libogg 1.3.3, libvorbis 1.3.6, libvpx 1.7.0, opus 1.2.1, x264 r2945
+
+cd ~ # or anywhere
+
+mkdir dev && cd dev
+
+# build package dependencies: see
+[./CI/util/build-package-deps-osx.sh script]
+# for building info. use prefix = /tmp/obsdeps
+
+# build libwebrtc:
+
+git clone --recursive https://github.com/SCG82/webrtc-checkout.git
+
+cd src # follow instructions in README.md to build webrtc (m69)
+
+# build OBS-studio-webrtc:
+
+git clone --recursive https://github.com/SCG82/OBS-studio-webtrc.git
+
+cd OBS-studio-webrtc
+
+./CI/install-dependencies-osx.sh
+
+brew install qt5
+
+export QTDIR=/usr/local/opt/qt5
+
+./CI/before-script-osx.sh
+
+# to build manually:
+
+mkdir -p build && cd build
+
+export BUILD_TYPE=RELEASE # or Debug
+export CEF_BUILD_VERSION=3.3282.1726.gc8368c8
+export CMAKE_PREFIX_PATH=/usr/local/opt/qt5/lib/cmake
+export WEBRTC_ROOT_DIR=$PWD/../../webrtc-checkout
+
+cmake \
+-DCMAKE_OSX_DEPLOYMENT_TARGET=10.10 \
+-DQTDIR=/usr/local/opt/qt5 \
+-DDepsPath=/tmp/obsdeps \
+-DVLCPath=/tmp/obsdeps/vlc-3.0.4 \
+-DBUILD_BROWSER=ON \
+-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+-DCEF_ROOT_DIR=/tmp/obsdeps/cef_binary_${CEF_BUILD_VERSION}_macosx64 \
+-DOPENSSL_ROOT_DIR=/tmp/obsdeps \
+-DDEV_DIR=$PWD/../.. \
+-DWEBRTC_ROOT_DIR=$WEBRTC_ROOT_DIR \
+-DWEBRTC_MAJOR_VERSION=69 ..
+
+make
+
+# to run OBS:
+
+cd rundir/${BUILD_TYPE}/bin
+
+./obs
+
+```
+
 ## Usage with a Janus server
 
 ### Configure JANUS
