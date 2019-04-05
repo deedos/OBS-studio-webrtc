@@ -28,10 +28,60 @@ if( WIN32 )
   # specific case this is the right way to approach the problem.
   set(WEBRTC_USE_FILE_INCLUDED 0)
 endif()
-find_package(libwebrtc 65 REQUIRED)
+
+find_package(libwebrtc REQUIRED)
+
+include_directories(${LIBWEBRTC_INCLUDE_DIRS})
+
+include_directories("${WEBRTC_ROOT_DIR}/src")
+include_directories("${WEBRTC_ROOT_DIR}/src/third_party")
+include_directories("${WEBRTC_ROOT_DIR}/src/third_party/abseil-cpp")
+include_directories("${WEBRTC_ROOT_DIR}/src/third_party/libyuv/include")
+
+add_definitions(-DWEBRTC_MAC)
+add_definitions(-DWEBRTC_POSIX)
+
+find_library(FOUNDATION_FRAMEWORK Foundation)
+find_library(CORE_FOUNDATION Foundation)
+find_library(AVFOUNDATION AVFoundation)
+find_library(SECURITY_FRAMEWORK Security)
+find_library(AUDIOTOOLBOX AudioToolbox)
+find_library(COREMEDIA CoreMedia)
+find_library(COREVIDEO CoreVideo)
+find_library(COREAUDIO CoreAudio)
+find_library(CORE_SERVICES CoreServices))
+
+set( EXTRA_LIBS
+  ${FOUNDATION_FRAMEWORK}
+  ${CORE_FOUNDATION}
+  ${AVFOUNDATION}
+  ${SECURITY_FRAMEWORK}
+  ${AUDIOTOOLBOX}
+  ${COREMEDIA}
+  ${COREVIDEO}
+  ${COREAUDIO}
+  ${COREFOUNDATION}
+  ${COREGRAPHICS}
+  ${CORE_SERVICES}
+)
+
+set( obs-outputs_PLATFORM_DEPS
+  ${FOUNDATION_FRAMEWORK}
+  ${AVFOUNDATION}
+  ${CORE_FOUNDATION}
+  ${AUDIOTOOLBOX}
+  ${COREMEDIA}
+  ${COREVIDEO}
+  ${COREAUDIO}
+  ${COREFOUNDATION}
+  ${COREGRAPHICS}
+  ${SECURITY_FRAMEWORK}
+  ${CORE_SERVICES}
+  ${WEBRTC_ROOT_DIR}/lib/libwebrtc.a  
+)
 
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ftl-sdk/CMakeLists.txt")
-  find_package(Libcurl REQUIRED)
+  find_package(Libcurl REQUIRED
 
   add_definitions(-DFTL_STATIC_COMPILE)
 
@@ -168,11 +218,22 @@ add_library( obs-outputs MODULE
 )
 
 target_link_libraries( obs-outputs
+  ${FOUNDATION_FRAMEWORK}
   ${SSL_LIBRARIES}
   ${ZLIB_LIBRARIES}
   ${obs-outputs_PLATFORM_DEPS}
   libobs
   websocketclient
+  ${AVFOUNDATION}
+  ${CORE_FOUNDATION}
+  ${AUDIOTOOLBOX}
+  ${COREMEDIA}
+  ${COREVIDEO}
+  ${COREAUDIO}
+  ${COREFOUNDATION}
+  ${COREGRAPHICS}
+  ${CORE_SERVICES}
+  webrtc
 )
 
 install_obs_plugin_with_data(obs-outputs data)

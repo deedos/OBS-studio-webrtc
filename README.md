@@ -48,15 +48,15 @@ Follow the original compilation, Installation and packaging guide https://github
 #### Standard Build (macOS)
 ``` bash
 # Build libwebrtc:
-git clone --recursive https://[url of repository host]/[repo owner]/webrtc-checkout.git
+git clone --recursive https://github.com/SCG82/webrtc-checkout.git
 
 cd src
 cat README.md
 # follow instructions to build webrtc (m69)
 
-git clone --recursive https://[url of repository host]/[repo owner]/obs-studio-mfc.git
+git clone --recursive https://github.com/SCG82/OBS-studio-webrtc.git
 
-cd obs-studio-mfc
+cd OBS-studio-webrtc
 
 sh ./build-deps.sh
 sh ./build.sh
