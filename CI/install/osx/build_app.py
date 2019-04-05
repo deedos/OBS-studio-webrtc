@@ -48,6 +48,7 @@ parser.add_argument('-f', '--sparkle-framework', dest='sparkle', default=None)
 parser.add_argument('-b', '--base-url', dest='base_url', default='https://obsproject.com/osx_update')
 parser.add_argument('-u', '--user', dest='user', default='jp9000')
 parser.add_argument('-c', '--channel', dest='channel', default='master')
+parser.add_argument('-t', '--build-type', dest='build_type', default='RELEASE')
 add_boolean_argument(parser, 'stable', default=False)
 parser.add_argument('-p', '--prefix', dest='prefix', default='')
 args = parser.parse_args()
@@ -63,7 +64,10 @@ inspect = list()
 
 inspected = set()
 
-build_path = args.dir
+if args.build_type != "RELEASE":
+    build_path = "rundir/" + args.build_type
+else:
+    build_path = args.dir
 build_path = build_path.replace("\\ ", " ")
 
 def add(name, external=False, copy_as=None):

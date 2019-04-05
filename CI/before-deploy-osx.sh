@@ -1,8 +1,17 @@
+#!/usr/bin/env bash
+
+BUILD_TYPE=${1:-RELEASE}
+CEF_BUILD_TYPE=${2:-Release}
+
 hr() {
   echo "───────────────────────────────────────────────────"
   echo $1
   echo "───────────────────────────────────────────────────"
 }
+
+if [[ BUILD_TYPE == "Debug" ]]; then
+  CEF_BUILD_TYPE=Debug
+fi
 
 # Exit if something fails
 set -e
@@ -21,8 +30,7 @@ cd ./build
 
 # Move obslua
 hr "Moving OBS LUA"
-#cp ./rundir/RELEASE/data/obs-scripting/obslua.so ./rundir/RELEASE/bin/
-cp ./rundir/RELEASE/data/obs-scripting/obslua.so ./rundir/RELEASE/bin/
+[ -f ./rundir/${BUILD_TYPE}/data/obs-scripting/obslua.so ] && mv ./rundir/${BUILD_TYPE}/data/obs-scripting/obslua.so ./rundir/${BUILD_TYPE}/bin/
 
 # Move obspython
 # hr "Moving OBS Python"
@@ -36,7 +44,7 @@ if [ -n "${TRAVIS_TAG}" ]; then
   STABLE=true
 fi
 
-sudo python ../CI/install/osx/build_app.py --public-key ../CI/install/osx/OBSPublicDSAKey.pem --sparkle-framework ../../sparkle/Sparkle.framework  --stable=$STABLE
+sudo python ../CI/install/osx/build_app.py --build-type=$BUILD_TYPE --public-key ../CI/install/osx/OBSPublicDSAKey.pem --stable=$STABLE
 
 # Move the CEF plugin back to where it belongs
 #hr "Moving CEF back"
@@ -44,17 +52,19 @@ sudo python ../CI/install/osx/build_app.py --public-key ../CI/install/osx/OBSPub
 #mv ./obs-browser.so ./rundir/RELEASE/obs-plugins/
 
 # Copy Chromium embedded framework to app Frameworks directory
-hr "Copying Chromium Embedded Framework.framework"
-sudo mkdir -p OBS.app/Contents/Frameworks
-sudo cp -r ../../cef_binary_${CEF_BUILD_VERSION}_macosx64/Release/Chromium\ Embedded\ Framework.framework OBS.app/Contents/Frameworks/
-sudo install_name_tool -change \
-	@rpath/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
-	../../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
-	OBS.app/Contents/Resources/obs-plugins/obs-browser.so
-sudo install_name_tool -change \
-	@rpath/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
-	../../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
-	OBS.app/Contents/Resources/obs-plugins/obs-browser-page
+if [ -f ./rundir/${BUILD_TYPE}/obs-plugins/obs-browser.so ]; then
+	hr "Copying Chromium Embedded Framework.framework"
+	sudo mkdir -p OBS.app/Contents/Frameworks
+ 	sudo cp -r $DEPS_DEST/cef_binary_${CEF_BUILD_VERSION}_macosx64/Release/Chromium\ Embedded\ Framework.framework OBS.app/Contents/Frameworks/
+	sudo install_name_tool -change \
+ 		@rpath/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+		../../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+		OBS.app/Contents/Resources/obs-plugins/obs-browser.so
+	sudo install_name_tool -change \
+		@rpath/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+		../../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+		OBS.app/Contents/Resources/obs-plugins/cef-bootstrap
+fi
 
 # Package app
 hr "Generating .pkg"
@@ -79,8 +89,10 @@ packagesbuild ../CI/install/osx/CMakeLists.pkgproj
 #	cp ./OBS.pkg ./$FILENAME
 #fi
 
+hr "Finished building OBS-WebRTC"
+
 # Move to the folder that travis uses to upload artifacts from
-hr "Renaming package"
-mkdir -p ../nightly
+#hr "Renaming package"
+#mkdir -p ../nightly
 #sudo mv OBS.pkg $FILENAME
-sudo mv ./OBS.pkg $FILENAME
+#sudo mv ./OBS.pkg $FILENAME
