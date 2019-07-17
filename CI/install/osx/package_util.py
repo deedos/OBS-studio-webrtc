@@ -16,7 +16,7 @@ def get_tag_info(tag):
 
 def gen_html(github_user, latest_tag):
 
-    url = 'https://github.com/{0}/oaabs-studio/commit/%H'.format(github_user)
+    url = 'https://github.com/{0}/obs-studio-mfc/commit/%H'.format(github_user)
 
     with open('readme.html', 'w') as f:
         f.write("<html><body>")
@@ -79,9 +79,9 @@ def prepare_pkg(project, package_id):
 
 
 import argparse
-parser = argparse.ArgumentParser(description='obs-studio package util')
+parser = argparse.ArgumentParser(description='obs-studio-mfc package util')
 parser.add_argument('-u', '--user', dest='user', default='jp9000')
-parser.add_argument('-p', '--package-id', dest='package_id', default='org.obsproject.pkg.obs-studio')
+parser.add_argument('-p', '--package-id', dest='package_id', default='com.myfreecams.pkg.obs-mfc')
 parser.add_argument('-f', '--project-file', dest='project', default='OBS.pkgproj')
 parser.add_argument('-j', '--jenkins-build', dest='jenkins_build', default='0')
 parser.add_argument('-b', '--branch', dest='branch', default='master')

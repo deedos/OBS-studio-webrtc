@@ -40,14 +40,15 @@ def add_boolean_argument(parser, name, default=False):
         '--' + name, nargs='?', default=default, const=True, type=_str_to_bool)
     group.add_argument('--no' + name, dest=name, action='store_false')
 
-parser = argparse.ArgumentParser(description='obs-studio package util')
+parser = argparse.ArgumentParser(description='obs-studio-mfc package util')
 parser.add_argument('-d', '--base-dir', dest='dir', default='rundir/RELEASE')
 parser.add_argument('-n', '--build-number', dest='build_number', default='0')
 parser.add_argument('-k', '--public-key', dest='public_key', default='OBSPublicDSAKey.pem')
 parser.add_argument('-f', '--sparkle-framework', dest='sparkle', default=None)
-parser.add_argument('-b', '--base-url', dest='base_url', default='https://builds.catchexception.org/obs-studio')
+parser.add_argument('-b', '--base-url', dest='base_url', default='https://obsproject.com/osx_update')
 parser.add_argument('-u', '--user', dest='user', default='jp9000')
 parser.add_argument('-c', '--channel', dest='channel', default='master')
+parser.add_argument('-t', '--build-type', dest='build_type', default='RELEASE')
 add_boolean_argument(parser, 'stable', default=False)
 parser.add_argument('-p', '--prefix', dest='prefix', default='')
 args = parser.parse_args()
@@ -63,7 +64,10 @@ inspect = list()
 
 inspected = set()
 
-build_path = args.dir
+if args.build_type != "RELEASE":
+    build_path = "rundir/" + args.build_type
+else:
+    build_path = args.dir
 build_path = build_path.replace("\\ ", " ")
 
 def add(name, external=False, copy_as=None):
@@ -71,10 +75,8 @@ def add(name, external=False, copy_as=None):
 		copy_as = name.split("/")[-1]
 	if name[0] != "/":
 		name = build_path+"/"+name
-	if ("cosmo" in name):
-		name = "/usr/local/lib/" + name.split("/")[len(name.split("/")) - 1]
-		print "COSMO LIB FOUND - Replacing /Users/cosmo/ path with /usr/local/lib/"
-		print name
+	if ("Chromium" in name):
+		return
 	t = LibTarget(name, external, copy_as)
 	if t in inspected:
 		return
@@ -87,6 +89,16 @@ for i in candidate_paths:
 	print("Checking " + i)
 	for root, dirs, files in walk(build_path+"/"+i):
 		for file_ in files:
+			if ".ini" in file_:
+				continue
+			if ".png" in file_:
+				continue
+			if ".effect" in file_:
+				continue
+			if ".py" in file_:
+				continue
+			if ".json" in file_:
+				continue
 			path = root + "/" + file_
 			try:
 				out = check_output("{0}otool -L '{1}'".format(args.prefix, path), shell=True,
@@ -125,6 +137,7 @@ while inspect:
 		add_plugins(path, "imageformats")
 		add_plugins(path, "accessible")
 		add_plugins(path, "styles")
+		add_plugins(path, "iconengines")
 
 
 	for line in out.split("\n")[1:]:
@@ -157,8 +170,8 @@ changes = " ".join(changes)
 
 info = plistlib.readPlist(plist_path)
 
-latest_tag = "beta"
-log = "bata"
+latest_tag = cmd('git describe --tags --abbrev=0')
+log = cmd('git log --pretty=oneline {0}...HEAD'.format(latest_tag))
 
 from os import path
 # set version
