@@ -10,7 +10,9 @@
 
 if(NOT WIN32)
 	set(Python_ADDITIONAL_VERSIONS 3.4)
+	# set(Python_ADDITIONAL_VERSIONS 3.7)
 	find_package(PythonLibs QUIET 3.4)
+	# find_package(PythonLibs QUIET 3.7)
 	return()
 endif()
 

@@ -30,6 +30,7 @@ find_path(Libfdk_INCLUDE_DIR
 		${LibfdkPath}
 		${DepsPath${_lib_suffix}}
 		${DepsPath}
+		${DepsPath}/include
 		${_LIBFDK_INCLUDE_DIRS}
 	PATHS
 		/usr/include /usr/local/include /opt/local/include /sw/include)
