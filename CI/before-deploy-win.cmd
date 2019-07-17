@@ -1,3 +1,4 @@
-robocopy C:\projects\obs-studio\build32\rundir\RelWithDebInfo C:\projects\obs-studio\build\ /E /XF .gitignore
-robocopy C:\projects\obs-studio\build64\rundir\RelWithDebInfo C:\projects\obs-studio\build\ /E /XC /XN /XO /XF .gitignore
-7z a build.zip C:\projects\obs-studio\build\*
+REM robocopy .\build32\rundir\RelWithDebInfo .\build\ /E /XF .gitignore
+REM robocopy .\build64\rundir\RelWithDebInfo .\build\ /E /XC /XN /XO /XF .gitignore
+robocopy .\build64\rundir\Release .\build\ /E /XC /XN /XO /XF .gitignore
+REM 7z a build.zip .\build\*

@@ -90,3 +90,6 @@ tags
 dependencies2015/
 *BUILD*
 UI/webrtcVersion.h
+
+!build.sh
+!build-*
