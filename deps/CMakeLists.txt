@@ -1,6 +1,6 @@
 
 if(NOT MINGW)
-add_subdirectory(w32-pthreads)
+	add_subdirectory(w32-pthreads)
 endif()
 
 add_subdirectory(glad)
