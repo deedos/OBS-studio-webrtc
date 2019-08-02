@@ -126,6 +126,8 @@ private:
 
     rtc::CriticalSection crit_;
 
+    rtc::CriticalSection crit_;
+
     // Audio Wrapper
     rtc::scoped_refptr<AudioDeviceModuleWrapper> adm;
 
