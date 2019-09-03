@@ -20,6 +20,7 @@
 #include "api/peer_connection_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/set_remote_description_observer_interface.h"
+#include "api/stats/rtc_stats_report.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "rtc_base/critical_section.h"
 #include "rtc_base/platform_file.h"
@@ -32,12 +33,11 @@
 #include <string>
 #include <vector>
 
-class WebRTCStreamInterface :
-    public WebsocketClient::Listener,
-    public webrtc::PeerConnectionObserver,
-    public webrtc::CreateSessionDescriptionObserver,
-    public webrtc::SetSessionDescriptionObserver,
-    public webrtc::SetRemoteDescriptionObserverInterface {};
+class WebRTCStreamInterface : public WebsocketClient::Listener,
+                              public webrtc::PeerConnectionObserver,
+                              public webrtc::CreateSessionDescriptionObserver,
+                              public webrtc::SetSessionDescriptionObserver,
+                              public webrtc::SetRemoteDescriptionObserverInterface {};
 
 class WebRTCStream : public rtc::RefCountedObject<WebRTCStreamInterface> {
 public:
@@ -56,10 +56,17 @@ public:
     bool stop();
     void onAudioFrame(audio_data *frame);
     void onVideoFrame(video_data *frame);
-    void setCodec(const std::string &new_codec) { this->video_codec = new_codec; }
+
+    uint64_t getBitrate();
+    int getDroppedFrames();
+
+    // Synchronously get stats
+    rtc::scoped_refptr<const webrtc::RTCStatsReport> NewGetStats();
+
+    void setCodec(const std::string &codec) { video_codec_ = codec; }
 
     //
-    // WebsocketClient::Listener implementation.
+    // WebsocketClient::Listener implementation
     //
     void onConnected() override;
     void onDisconnected() override;
@@ -70,9 +77,13 @@ public:
     void onRemoteIceCandidate(const std::string &sdpData) override;
 
     //
-    // PeerConnectionObserver implementation.
+    // PeerConnectionObserver implementation
     //
     void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState /* new_state */) override {}
+    void OnAddTrack(rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
+                    const std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>> &streams) override {}
+    void OnTrack(rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override {}
+    void OnRemoveTrack(rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override {}
     void OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> /* stream */) override {}
     void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> /* stream */) override {}
     void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> /* channel */) override {}
@@ -82,82 +93,61 @@ public:
     void OnIceCandidate(const webrtc::IceCandidateInterface *candidate) override;
     void OnIceConnectionReceivingChange(bool /* receiving */) override {}
 
-    // CreateSessionDescriptionObserver
+    // CreateSessionDescriptionObserver implementation
     void OnSuccess(webrtc::SessionDescriptionInterface *desc) override;
 
-    // CreateSessionDescriptionObserver / SetSessionDescriptionObserver
-    void OnFailure(const std::string &error) override;
+    // CreateSessionDescriptionObserver / SetSessionDescriptionObserver implementation
+    void OnFailure(webrtc::RTCError error) override;
 
-    // SetSessionDescriptionObserver
+    // SetSessionDescriptionObserver implementation
     void OnSuccess() override;
 
-    // SetRemoteDescriptionObserverInterface
+    // SetRemoteDescriptionObserverInterface implementation
     void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override;
 
-    // Bitrate & dropped frames
-    uint64_t getBitrate();
-    int getDroppedFrames();
-
-    // Synchronously get stats
-    rtc::scoped_refptr<const webrtc::RTCStatsReport> NewGetStats();
-
+protected:
     template <typename T>
-    rtc::scoped_refptr<T> make_scoped_refptr(T *t) {
+    rtc::scoped_refptr<T> make_scoped_refptr(T *t)
+    {
         return rtc::scoped_refptr<T>(t);
     }
 
 private:
-    // Connection properties
-    Type type;
-    int audio_bitrate;
-    int video_bitrate;
-    std::string url;
-    std::string room;
-    std::string username;
-    std::string password;
-    std::string protocol;
-    std::string audio_codec;
-    std::string video_codec;
+    Type type_;
+    int audio_bitrate_;
+    int video_bitrate_;
+    std::string protocol_;
+    std::string username_;
+    std::string video_codec_;
 
-    uint16_t frame_id;
-    uint64_t audio_bytes_sent;
-    uint64_t video_bytes_sent;
-    uint64_t total_bytes_sent;
-    int pli_received; // Picture Loss Indication
+    uint16_t frame_id_;
+    uint64_t audio_bytes_sent_;
+    uint64_t video_bytes_sent_;
+    int pli_received_;
 
     rtc::CriticalSection crit_;
 
     // Audio Wrapper
-    rtc::scoped_refptr<AudioDeviceModuleWrapper> adm;
+    rtc::scoped_refptr<AudioDeviceModuleWrapper> adm_;
 
     // Video Capturer
-    rtc::scoped_refptr<VideoCapturer> videoCapturer;
+    rtc::scoped_refptr<VideoCapturer> videoCapturer_;
     rtc::TimestampAligner timestamp_aligner_;
 
     // PeerConnection
-    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory;
-    rtc::scoped_refptr<webrtc::PeerConnectionInterface> pc;
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> pc_;
 
-    // SetRemoteDescription observer
-    rtc::scoped_refptr<webrtc::SetRemoteDescriptionObserverInterface> srd_observer;
+    // WebRTC Threads
+    std::unique_ptr<rtc::Thread> network_;
+    std::unique_ptr<rtc::Thread> worker_;
+    std::unique_ptr<rtc::Thread> signaling_;
 
-    // Media stream
-    rtc::scoped_refptr<webrtc::MediaStreamInterface> stream;
-
-    // Tracks
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track;
-
-    // WebRTC threads
-    std::unique_ptr<rtc::Thread> network;
-    std::unique_ptr<rtc::Thread> worker;
-    std::unique_ptr<rtc::Thread> signaling;
-
-    // Websocket client
-    WebsocketClient *client;
+    // Websocket Client
+    WebsocketClient *client_;
 
     // OBS stream output
-    obs_output_t *output;
+    obs_output_t *output_;
 };
 
 #endif

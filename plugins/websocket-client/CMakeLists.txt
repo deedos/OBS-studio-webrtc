@@ -10,7 +10,6 @@ if(WIN32)
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/restclient-cpp/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/websocketpp)
 include_directories(${CMAKE_SOURCE_DIR}/libobs)
 
@@ -20,6 +19,15 @@ include_directories(${CMAKE_SOURCE_DIR}/libobs)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 # set(JSON_Install OFF CACHE INTERNAL "")
 add_subdirectory(nlohmann_json)
+
+#------------------------------------------------------------------------
+# REST Client for C++
+#
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/restclient-cpp/include/restclient-cpp/version.h
+	"#define RESTCLIENT_VERSION \"0.5.0\"\n")
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/restclient-cpp/include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/restclient-cpp/include)
 
 #------------------------------------------------------------------------
 # OpenSSL

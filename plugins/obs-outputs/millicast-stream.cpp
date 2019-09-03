@@ -46,8 +46,6 @@ extern "C" void *millicast_stream_create(obs_data_t *, obs_output_t *output)
 	WebRTCStream *stream = new WebRTCStream(output);
 	// Don't allow it to be deleted
 	stream->AddRef();
-	// info("millicast_setCodec: h264");
-	// stream->setCodec("h264");
 	// Return it
 	return (void*)stream;
 }

@@ -21,27 +21,30 @@ public:
     AudioDeviceModuleWrapper();
     ~AudioDeviceModuleWrapper() override;
 
-    rtc::scoped_refptr<AudioDeviceModuleWrapper> CreateAudioDeviceModule();
-
     // Main initialization and termination
     int32_t Init() override;
     int32_t Terminate() override;
     bool Initialized() const override;
 
-    void onIncomingData(uint8_t* data, size_t samples_per_channel);
+    void onIncomingData(uint8_t *data, size_t samples_per_channel);
+
+    static rtc::scoped_refptr<AudioDeviceModuleWrapper> Create()
+    {
+        return new rtc::RefCountedObject<AudioDeviceModuleWrapper>();
+    }
 
     virtual int64_t TimeUntilNextProcess() { return 1000; }
     virtual void Process() {}
 
     // Retrieve the currently utilized audio layer
-    int32_t ActiveAudioLayer(AudioLayer* audioLayer) const override
+    int32_t ActiveAudioLayer(AudioLayer *audioLayer) const override
     {
         *audioLayer = AudioLayer::kDummyAudio;
         return 0;
     }
 
     // Full-duplex transportation of PCM audio
-    int32_t RegisterAudioCallback(AudioTransport* audioCallback) override
+    int32_t RegisterAudioCallback(AudioTransport *audioCallback) override
     {
         this->audioTransport = audioCallback;
         return 0;
@@ -72,18 +75,18 @@ public:
     bool Recording() const override { return true; }
 
     // Stereo support
-    int32_t StereoRecordingIsAvailable(bool* available) const override
+    int32_t StereoRecordingIsAvailable(bool *available) const override
     {
         *available = true;
         return 0;
     }
 
 public:
-    bool                 _initialized;
+    bool _initialized;
     rtc::CriticalSection _critSect;
-    AudioTransport*      audioTransport;
-    uint8_t              pending[640 * 2 * 2];
-    size_t               pendingLength;
+    AudioTransport *audioTransport;
+    uint8_t pending[640 * 2 * 2];
+    size_t pendingLength;
 };
 
 #endif
