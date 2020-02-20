@@ -49,6 +49,8 @@ find_path(WEBRTC_INCLUDE_DIR
 		pc/channel.h
 		api/peerconnectioninterface.h
 		api/peer_connection_interface.h
+		api/scoped_refptr.h
+		
 	HINTS
 		ENV WEBRTC_ROOT_DIR${_lib_suffix}
 		ENV WEBRTC_ROOT_DIR
