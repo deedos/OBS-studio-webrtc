@@ -383,6 +383,7 @@ if(LIBWEBRTC_FOUND)
 
 	set(LIBWEBRTC_INCLUDE_DIRS
 		${WEBRTC_INCLUDE_DIR}
+		${WEBRTC_INCLUDE_DIR}/api
 		${WEBRTC_INCLUDE_DIR}/third_party
 		${WEBRTC_INCLUDE_DIR}/third_party/abseil-cpp
 		${WEBRTC_INCLUDE_DIR}/third_party/libyuv/include
